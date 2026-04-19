@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <link rel="stylesheet" href="css/style.css"/>
+
+            
+
+            
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    
+    
+<div id="month-panel" style="
+    position:fixed; top:14px; left:50%; transform:translateX(-50%);
+    z-index:9999; background:rgba(8,12,28,0.93);
+    border:1px solid #1e4a6a; border-radius:12px;
+    padding:10px 22px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 4px 24px rgba(0,150,255,0.15);
+    font-family:'Courier New',monospace; backdrop-filter:blur(6px);
+">
+  <div style="display:flex;flex-direction:column;gap:1px;">
+    <span style="color:#7ec8e3;font-size:10px;letter-spacing:2px;font-weight:bold;">NAMMA METRO</span>
+    <span style="color:#4a8fa8;font-size:9px;letter-spacing:1px;">OD FLOW ANALYSIS</span>
+  </div>
+  <div style="width:1px;height:32px;background:#1e4a6a;"></div>
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <label style="color:#4a8fa8;font-size:9px;letter-spacing:1px;">SELECT MONTH</label>
+    <select id="month-select" onchange="switchMonth(this.value)" style="
+      background:#0d1b2a; color:#e0f7ff; border:1px solid #1e88e5;
+      border-radius:6px; padding:5px 14px; font-size:13px; cursor:pointer;
+      font-family:inherit; outline:none; min-width:180px;
+    ">
+      <option value="September">September 2025</option>
+      <option value="October">October 2025</option>
+      <option value="November">November 2025</option>
+      <option value="December" selected>December 2025</option>
+    </select>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1px;">
+    <span style="color:#4a8fa8;font-size:9px;letter-spacing:1px;">TOTAL TRIPS</span>
+    <span id="trip-count" style="color:#4fc3f7;font-size:14px;font-weight:bold;">—</span>
+  </div>
+</div>
+    
+
+
+<div id="flow-legend" style="
+    position:fixed; bottom:28px; left:14px; z-index:9998;
+    background:rgba(8,12,28,0.93); border:1px solid #1e3a4a;
+    border-radius:10px; padding:14px 18px;
+    font-family:'Courier New',monospace; font-size:11px; color:#cce8ff;
+    box-shadow:0 2px 24px rgba(0,0,0,0.7); min-width:214px; user-select:none;">
+  <div style="font-size:11px;font-weight:bold;color:#7ec8e3;margin-bottom:6px;
+              letter-spacing:2px;border-bottom:1px solid #1e3a4a;padding-bottom:7px;
+              display:flex;justify-content:space-between;align-items:center;">
+    <span>PASSENGER FLOW</span>
+    <div style="display:flex;gap:4px;">
+      <span onclick="flowFilterAll(true)" style="font-size:9px;cursor:pointer;color:#4fc3f7;
+             padding:2px 7px;border:1px solid #1e4a6a;border-radius:4px;transition:border-color .18s;"
+            onmouseover="this.style.borderColor='#4fc3f7'" onmouseout="this.style.borderColor='#1e4a6a'">ALL</span>
+      <span onclick="flowFilterAll(false)" style="font-size:9px;cursor:pointer;color:#f3722c;
+             padding:2px 7px;border:1px solid #1e4a6a;border-radius:4px;transition:border-color .18s;"
+            onmouseover="this.style.borderColor='#f3722c'" onmouseout="this.style.borderColor='#1e4a6a'">NONE</span>
+    </div>
+  </div>
+  <div style="font-size:9px;color:#4a8fa8;letter-spacing:1px;margin-bottom:7px;">&#x25BC; CLICK RANGE TO TOGGLE</div>
+  <div class="flow-range-row" id="fr-lt500" onclick="toggleFlowRange('lt500',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:2px;background:#607d8b;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">&lt; 500</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div class="flow-range-row" id="fr-500_2k" onclick="toggleFlowRange('r500_2k',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:2px;background:#00b4d8;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">500 &#x2013; 2K</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div class="flow-range-row" id="fr-2k_5k" onclick="toggleFlowRange('r2k_5k',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:3px;background:#48cae4;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">2K &#x2013; 5K</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div class="flow-range-row" id="fr-5k_15k" onclick="toggleFlowRange('r5k_15k',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:4px;background:#f9c74f;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">5K &#x2013; 15K</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div class="flow-range-row" id="fr-15k_50k" onclick="toggleFlowRange('r15k_50k',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:5px;background:#f3722c;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">15K &#x2013; 50K</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div class="flow-range-row" id="fr-gt50k" onclick="toggleFlowRange('gt50k',this)"
+       style="display:flex;align-items:center;gap:10px;margin:3px 0;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px solid transparent;">
+    <div style="width:30px;height:7px;background:#e63946;border-radius:2px;flex-shrink:0;"></div>
+    <span style="flex:1;">&gt; 50K</span>
+    <span class="fr-check" style="color:#4fc3f7;font-size:11px;min-width:13px;text-align:center;">&#x2713;</span>
+  </div>
+  <div style="margin-top:12px;border-top:1px solid #1e3a4a;padding-top:10px;
+              font-size:10px;color:#7ec8e3;letter-spacing:1px;margin-bottom:6px;">METRO LINES</div>
+  <div style="display:flex;align-items:center;gap:8px;margin:4px 0;"><div style="width:26px;height:4px;background:#9b59b6;border-radius:2px;"></div><span>Purple Line (East&#x2013;West)</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:4px 0;"><div style="width:26px;height:4px;background:#2ecc71;border-radius:2px;"></div><span>Green Line (North&#x2013;South)</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:4px 0;"><div style="width:26px;height:4px;background:#f9c500;border-radius:2px;"></div><span>Yellow Line (Reach 6)</span></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:8px 0 0 0;">
+    <div style="width:10px;height:10px;background:#1e88e5;border-radius:50%;border:1.5px solid #0b3954;flex-shrink:0;"></div>
+    <span>Metro Station</span>
+  </div>
+</div>
+    
+<script src="js/ui.js"></script>
+
+    
+            <div class="folium-map" id="map_945935b7a94eee1b0ce96a1f4ff7f327" ></div>
+
+<!-- ===== 4 MAP VIEWS — Toggle Button ===== -->
+<div id="avgmap-btn" onclick="toggleAvgMaps()" style="
+    position:fixed; bottom:76px; right:14px; z-index:9999;
+    background:rgba(8,12,28,0.93); border:1px solid #1e4a6a; border-radius:10px;
+    padding:10px 18px; cursor:pointer; font-family:'Courier New',monospace;
+    font-size:11px; color:#a8d8ea; letter-spacing:1.5px; font-weight:bold;
+    box-shadow:0 2px 16px rgba(0,150,255,0.15); backdrop-filter:blur(6px);
+    transition:border-color 0.2s;
+" onmouseover="this.style.borderColor='#4fc3f7'" onmouseout="this.style.borderColor='#1e4a6a'">
+  &#x25B2; 4 MAP VIEWS
+</div>
+
+<!-- ===== AVG FLOW / DAY — Toggle Button ===== -->
+<div id="chart-btn" onclick="toggleCharts()" style="
+    position:fixed; bottom:28px; right:14px; z-index:9999;
+    background:rgba(8,12,28,0.93); border:1px solid #1e4a6a; border-radius:10px;
+    padding:10px 18px; cursor:pointer; font-family:'Courier New',monospace;
+    font-size:11px; color:#7ec8e3; letter-spacing:1.5px; font-weight:bold;
+    box-shadow:0 2px 16px rgba(0,150,255,0.15); backdrop-filter:blur(6px);
+    transition:border-color 0.2s;
+" onmouseover="this.style.borderColor='#4fc3f7'" onmouseout="this.style.borderColor='#1e4a6a'">
+  ▲ AVG FLOW / DAY
+</div>
+
+<!-- ===== Chart Panel ===== -->
+<div id="chart-panel" style="
+    display:none; position:fixed; bottom:0; left:0; right:0; height:56vh;
+    z-index:9998; background:rgba(6,10,22,0.97);
+    border-top:1px solid #1e4a6a;
+    padding:12px 18px 8px; box-shadow:0 -4px 30px rgba(0,0,0,0.7);
+">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-family:'Courier New',monospace;color:#7ec8e3;font-size:11px;letter-spacing:2px;font-weight:bold;">
+      AVG PASSENGER FLOW PER DAY &mdash; TOP 15 OD PAIRS
+    </div>
+    <div onclick="toggleCharts()" style="cursor:pointer;color:#4a8fa8;font-size:18px;line-height:1;padding:0 6px;" title="Close">&#x2715;</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;height:calc(100% - 38px);">
+    <div style="background:rgba(13,27,42,0.85);border:1px solid #1e3a4a;border-radius:8px;padding:8px 10px;min-height:0;">
+      <canvas id="chart-sep"></canvas>
+    </div>
+    <div style="background:rgba(13,27,42,0.85);border:1px solid #1e3a4a;border-radius:8px;padding:8px 10px;min-height:0;">
+      <canvas id="chart-oct"></canvas>
+    </div>
+    <div style="background:rgba(13,27,42,0.85);border:1px solid #1e3a4a;border-radius:8px;padding:8px 10px;min-height:0;">
+      <canvas id="chart-nov"></canvas>
+    </div>
+    <div style="background:rgba(13,27,42,0.85);border:1px solid #1e3a4a;border-radius:8px;padding:8px 10px;min-height:0;">
+      <canvas id="chart-dec"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4 Map Views Panel ===== -->
+<div id="avgmap-panel" style="
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:10000;
+    background:rgba(4,8,18,0.98); flex-direction:column;
+    font-family:'Courier New',monospace;
+">
+  <div style="display:flex;justify-content:space-between;align-items:center;
+              padding:10px 20px; border-bottom:1px solid #1e4a6a; flex-shrink:0;">
+    <div style="color:#7ec8e3;font-size:11px;letter-spacing:2px;font-weight:bold;">
+      AVG PASSENGER FLOW PER DAY &mdash; 4 MONTHLY MAP VIEWS
+    </div>
+    <div onclick="toggleAvgMaps()" style="cursor:pointer;color:#4a8fa8;font-size:20px;line-height:1;padding:0 8px;" title="Close">&#x2715;</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:8px;flex:1;min-height:0;">
+    <div style="position:relative;border:1px solid #1e3a4a;border-radius:8px;overflow:hidden;">
+      <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:500;
+                  background:rgba(8,12,28,0.88);border:1px solid #1e4a6a;border-radius:6px;
+                  padding:4px 14px;font-size:10px;color:#7ec8e3;letter-spacing:1.5px;font-weight:bold;white-space:nowrap;">
+        SEPTEMBER 2025
+      </div>
+      <div id="avgmap-sep" style="width:100%;height:100%;"></div>
+    </div>
+    <div style="position:relative;border:1px solid #1e3a4a;border-radius:8px;overflow:hidden;">
+      <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:500;
+                  background:rgba(8,12,28,0.88);border:1px solid #1e4a6a;border-radius:6px;
+                  padding:4px 14px;font-size:10px;color:#f9c74f;letter-spacing:1.5px;font-weight:bold;white-space:nowrap;">
+        OCTOBER 2025
+      </div>
+      <div id="avgmap-oct" style="width:100%;height:100%;"></div>
+    </div>
+    <div style="position:relative;border:1px solid #1e3a4a;border-radius:8px;overflow:hidden;">
+      <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:500;
+                  background:rgba(8,12,28,0.88);border:1px solid #1e4a6a;border-radius:6px;
+                  padding:4px 14px;font-size:10px;color:#80d28a;letter-spacing:1.5px;font-weight:bold;white-space:nowrap;">
+        NOVEMBER 2025
+      </div>
+      <div id="avgmap-nov" style="width:100%;height:100%;"></div>
+    </div>
+    <div style="position:relative;border:1px solid #1e3a4a;border-radius:8px;overflow:hidden;">
+      <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:500;
+                  background:rgba(8,12,28,0.88);border:1px solid #1e4a6a;border-radius:6px;
+                  padding:4px 14px;font-size:10px;color:#f87171;letter-spacing:1.5px;font-weight:bold;white-space:nowrap;">
+        DECEMBER 2025
+      </div>
+      <div id="avgmap-dec" style="width:100%;height:100%;"></div>  <!-- Avg/Day Legend (interactive) -->
+  <div style="position:absolute;bottom:22px;left:22px;z-index:10001;
+              background:rgba(8,12,28,0.93);border:1px solid #1e3a4a;border-radius:10px;
+              padding:12px 16px;font-size:10px;color:#cce8ff;min-width:185px;user-select:none;">
+    <div style="font-size:10px;font-weight:bold;color:#7ec8e3;margin-bottom:6px;
+                letter-spacing:2px;border-bottom:1px solid #1e3a4a;padding-bottom:6px;
+                display:flex;justify-content:space-between;align-items:center;">
+      <span>AVG PAX / DAY</span>
+      <div style="display:flex;gap:3px;">
+        <span onclick="avgFilterAll(true)" style="font-size:8px;cursor:pointer;color:#4fc3f7;
+               padding:1px 5px;border:1px solid #1e4a6a;border-radius:3px;"
+              onmouseover="this.style.borderColor='#4fc3f7'" onmouseout="this.style.borderColor='#1e4a6a'">ALL</span>
+        <span onclick="avgFilterAll(false)" style="font-size:8px;cursor:pointer;color:#f3722c;
+               padding:1px 5px;border:1px solid #1e4a6a;border-radius:3px;"
+              onmouseover="this.style.borderColor='#f3722c'" onmouseout="this.style.borderColor='#1e4a6a'">NONE</span>
+      </div>
+    </div>
+    <div style="font-size:8px;color:#4a8fa8;letter-spacing:1px;margin-bottom:5px;">&#x25BC; CLICK TO TOGGLE</div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_lt10',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:2px;background:#607d8b;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">&lt; 10</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_10_50',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:2px;background:#00b4d8;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">10 &#x2013; 50</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_50_200',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:3px;background:#48cae4;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">50 &#x2013; 200</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_200_500',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:4px;background:#f9c74f;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">200 &#x2013; 500</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_500_2k',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:5px;background:#f3722c;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">500 &#x2013; 2K</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+    <div class="avg-range-row" onclick="toggleAvgRange('avg_gt2k',this)" style="display:flex;align-items:center;gap:8px;margin:3px 0;cursor:pointer;padding:4px 5px;border-radius:5px;border:1px solid transparent;"><div style="width:28px;height:7px;background:#e63946;border-radius:2px;flex-shrink:0;"></div><span style="flex:1;">&gt; 2K</span><span class="fr-check" style="color:#4fc3f7;font-size:10px;">&#x2713;</span></div>
+  </div>n>&gt; 2K</span></div>
+  </div>
+</div>
+
+</body>
+<script src="js/map.js"></script>
+
+
+<script src="js/charts.js"></script>
+
+
+<script src="js/filters.js"></script>
+
+
+
+
+</html>
