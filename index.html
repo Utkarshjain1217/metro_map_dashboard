@@ -139,6 +139,47 @@
     
             <div class="folium-map" id="map_945935b7a94eee1b0ce96a1f4ff7f327" ></div>
 
+<!-- ===== OD LOOKUP PANEL ===== -->
+<div id="od-lookup-panel" style="
+    position:fixed; top:70px; left:14px; z-index:9999;
+    background:rgba(8,12,28,0.93); border:1px solid #1e4a6a;
+    border-radius:10px; padding:14px 18px;
+    font-family:'Courier New',monospace; color:#cce8ff;
+    box-shadow:0 2px 24px rgba(0,0,0,0.7); min-width:260px;
+">
+  <div style="font-size:11px;font-weight:bold;color:#7ec8e3;margin-bottom:10px;
+              letter-spacing:2px;border-bottom:1px solid #1e3a4a;padding-bottom:7px;">
+    OD AVERAGE FLOW
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div>
+      <label style="color:#4a8fa8;font-size:9px;letter-spacing:1px;display:block;margin-bottom:3px;">ORIGIN (SELECT OR CLICK MAP)</label>
+      <select id="od-origin" style="width:100%;background:#0d1b2a;color:#e0f7ff;border:1px solid #1e88e5;border-radius:4px;padding:4px;font-size:11px;outline:none;">
+        <option value="">-- Select Origin --</option>
+      </select>
+    </div>
+    <div>
+      <label style="color:#4a8fa8;font-size:9px;letter-spacing:1px;display:block;margin-bottom:3px;">DESTINATION (SELECT OR CLICK MAP)</label>
+      <select id="od-dest" style="width:100%;background:#0d1b2a;color:#e0f7ff;border:1px solid #1e88e5;border-radius:4px;padding:4px;font-size:11px;outline:none;">
+        <option value="">-- Select Destination --</option>
+      </select>
+    </div>
+  </div>
+  <div id="od-result" style="margin-top:12px;display:none;padding-top:10px;border-top:1px solid #1e3a4a;">
+    <div style="font-size:10px;color:#4a8fa8;letter-spacing:1px;margin-bottom:6px;">MONTH-WISE TOTAL FLOW</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;font-size:11px;">
+      <div style="display:flex;justify-content:space-between;"><span>SEP:</span><span id="od-sep-val" style="color:#e0f7ff;font-weight:bold;">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>OCT:</span><span id="od-oct-val" style="color:#e0f7ff;font-weight:bold;">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>NOV:</span><span id="od-nov-val" style="color:#e0f7ff;font-weight:bold;">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>DEC:</span><span id="od-dec-val" style="color:#e0f7ff;font-weight:bold;">0</span></div>
+    </div>
+    <div style="border-top:1px dashed #1e4a6a;padding-top:6px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:10px;color:#4a8fa8;letter-spacing:1px;">OVERALL AVG:</span>
+      <span id="od-flow-val" style="font-size:14px;font-weight:bold;color:#4fc3f7;">0 pax/day</span>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 4 MAP VIEWS — Toggle Button ===== -->
 <div id="avgmap-btn" onclick="toggleAvgMaps()" style="
     position:fixed; bottom:76px; right:14px; z-index:9999;
